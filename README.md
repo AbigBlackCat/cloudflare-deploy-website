@@ -276,5 +276,3 @@ cloudflare-deploy-website/
 - [Wrangler 文档](https://developers.cloudflare.com/workers/wrangler/)
 - [Agent Skills 标准](https://agentskills.io)
 - [Vercel Labs skills CLI](https://github.com/vercel-labs/skills)
-
-README 的信息组织方式参考了 [zhangxuefeng-skill](https://github.com/alchaincyf/zhangxuefeng-skill)：先说明效果和适用场景，再提供跨 Agent 安装与小白可复制的使用方式。
