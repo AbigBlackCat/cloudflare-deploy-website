@@ -1,45 +1,45 @@
 ---
 name: cloudflare-deploy-website
-description: Deploy an existing static, SPA, SSR, or full-stack website to Cloudflare Workers and obtain a verified workers.dev URL. Use for a site's first Cloudflare deployment; domain onboarding and custom-domain cutover belong in cloudflare-connect-domain.
+description: 将已有的静态网站、SPA、SSR 或全栈网站部署到 Cloudflare Workers，并获得经过验证的 workers.dev 地址。适用于网站第一次部署到 Cloudflare；域名接入和自定义域名切换应使用 cloudflare-connect-domain。
 ---
 
-# Cloudflare Deploy Website
+# 将网站部署到 Cloudflare
 
-Deploy the user's existing project with the smallest Cloudflare-specific change its architecture needs. Treat the repository, lockfile, framework, and current deployment scripts as the source of truth.
+把用户已有的项目安全部署到 Cloudflare，尽量少改代码。以项目现有仓库、锁文件、框架配置和部署脚本为准，不擅自重构。
 
-## Start with evidence
+## 先查清项目现状
 
-1. Inspect the working tree and do not overwrite unrelated or uncommitted work.
-2. Identify the package manager, build command, output directory, framework, runtime requirements, current hosting adapter, existing Wrangler configuration, and pinned Wrangler version.
-3. Determine whether the site is static, an SPA, SSR/full-stack, or already deployed with Pages. Use Workers Static Assets for a new static or SPA deployment and the framework's current Workers adapter for SSR/full-stack. Preserve an existing Pages deployment unless the user requests migration.
-4. Read [references/deployment-workflow.md](references/deployment-workflow.md) before changing configuration or deploying.
+1. 查看工作区状态，不覆盖与本次部署无关的未提交修改。
+2. 确认包管理器、构建命令、产物目录、框架、运行时要求、现有托管适配器、Wrangler 配置和 Wrangler 版本。
+3. 判断项目属于静态网站、SPA、SSR/全栈，还是已经使用 Cloudflare Pages。新建静态网站或 SPA 优先使用 Workers Static Assets；SSR/全栈项目使用对应框架当前支持的 Workers 适配方式；除非用户明确要求迁移，否则保留已有 Pages 部署。
+4. 修改配置或执行部署前，阅读 [references/deployment-workflow.md](references/deployment-workflow.md)。
 
-## Establish the target
+## 明确部署目标
 
-Confirm or infer only values that can be derived safely from the project: Worker name, Cloudflare account, production environment, build output, and required bindings. Ask for a choice only when it changes ownership, cost, or production behavior.
+优先从项目中推导 Worker 名称、Cloudflare 账号、生产环境、构建产物和所需绑定。只有当选择会改变资源归属、费用或生产行为时，才向用户确认。
 
-Deploy to `*.workers.dev` first. A custom domain is not a prerequisite and is outside this skill's main workflow. Do not add D1, KV, R2, Queues, or other products merely because Cloudflare offers them; create only resources the application actually uses.
+第一次先部署到 `*.workers.dev`。自定义域名不是首次上线的前提，也不是本 Skill 的主要范围。不要因为 Cloudflare 提供 D1、KV、R2 或 Queues 就全部创建；只有代码确实依赖时才创建。
 
-## Authenticate and protect secrets
+## 登录与密钥安全
 
-- Run the project-local Wrangler `whoami` before remote changes and verify the intended account.
-- If login, account selection, payment confirmation, or another browser-only step is required, give the user one precise action and resume from the failed checkpoint afterward.
-- Keep secret values out of source, command arguments, chat output, and logs. Use Wrangler's interactive or documented protected-input mechanism. Ignore local secret files in Git.
-- Treat database migrations, secret changes, resource creation, and deployment as production mutations. Resolve the exact account, environment, and resource first.
+- 远程操作前，使用项目本地 Wrangler 执行 `whoami`，确认目标账号。
+- 如果需要网页登录、选择账号、确认付款或完成其他只能由用户操作的步骤，只要求用户完成一个明确动作，然后从失败检查点继续。
+- 密钥不得进入源码、命令参数、聊天输出或日志。使用 Wrangler 的交互式输入或官方支持的安全输入方式；本地密钥文件必须被 Git 忽略。
+- 数据库迁移、密钥修改、资源创建和部署都属于生产变更。执行前确认具体账号、环境和资源。
 
-## Configure and deploy
+## 配置与部署
 
-- Use the project's pinned Wrangler and package-manager commands. Do not silently upgrade dependencies.
-- Prefer `wrangler.jsonc` for a new configuration. For a new Worker, set the compatibility date to the current date; do not advance an existing date incidentally.
-- Edit the source configuration, not framework-generated output. For build systems that generate a flattened Wrangler file, build first and deploy the generated config exactly as the project expects.
-- Keep public configuration in Wrangler vars and secrets in the secret store. Bind existing resources by verified identifiers; avoid accidental automatic provisioning.
-- Run the repository's relevant checks and production build. Use `wrangler deploy --dry-run` when supported, understanding that it does not validate remote resources.
-- Create required remote resources, apply remote migrations only to the confirmed database, set required secrets, and then run the project's deployment command. Prefer an existing orchestrated command over reconstructing its individual steps.
+- 使用项目锁定的包管理器和 Wrangler 版本，不静默升级依赖。
+- 新配置优先使用 `wrangler.jsonc`。新 Worker 的 compatibility date 使用当前日期；不要顺手修改已有项目的日期。
+- 修改源配置，不修改框架生成的构建产物。如果构建会生成扁平化 Wrangler 配置，应先构建，再按项目约定部署生成的配置。
+- 公开配置放在 Wrangler vars，敏感值放在 secret store。绑定已有资源时先核对标识，避免意外自动创建资源。
+- 运行项目已有的必要检查和生产构建。支持时执行 `wrangler deploy --dry-run`，但不要把 dry run 当成远程资源验证。
+- 按实际依赖创建远程资源，只对确认过的远程数据库执行迁移，设置必要密钥，然后运行项目自己的部署命令。已有一键部署脚本时，优先使用它而不是手工拆散步骤。
 
-Stop after the same failure repeats or when the next step requires new authorization, a paid product, destructive data work, or a missing user-owned credential. Report the exact checkpoint instead of retrying blindly.
+同一错误重复出现，或下一步需要新增授权、付费产品、破坏性数据操作、缺失的用户凭据时，停止盲目重试并说明准确检查点。
 
-## Verify the live result
+## 验证线上结果
 
-Do not equate a successful upload with a working site. Verify the returned production URL over HTTPS, representative routes, static assets, SPA fallback or SSR behavior, API/health endpoints when present, and every storage or database path affected by the deployment. Inspect logs for runtime failures when the UI result is ambiguous.
+上传成功不等于网站可用。必须通过 HTTPS 访问返回的生产地址，检查代表性页面、静态资源、SPA 深层路由或 SSR 行为、存在时的 API/健康检查，以及本次部署涉及的数据库或存储路径。界面结果不明确时检查运行日志。
 
-Finish with the Worker name, account/environment, live `workers.dev` URL, resources and secrets configured (names only), migrations applied, checks performed, and any manual or unverified items. If the user later has a domain, route that task to `cloudflare-connect-domain`.
+最终交付 Worker 名称、账号/环境、`workers.dev` 地址、已配置资源和密钥名称（不含密钥值）、已执行迁移、验证结果，以及仍需人工完成的事项。用户后续拥有域名时，引导使用 `cloudflare-connect-domain`。

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Cloudflare Deploy Website"
-  short_description: "Deploy an existing website to Cloudflare Workers safely"
-  default_prompt: "Use $cloudflare-deploy-website to deploy this website to Cloudflare and verify the live result."
+  display_name: "网站部署到 Cloudflare"
+  short_description: "将现有网站安全部署到 Cloudflare Workers"
+  default_prompt: "使用 $cloudflare-deploy-website 把这个网站部署到 Cloudflare，并验证线上结果。"
