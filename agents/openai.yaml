@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cloudflare Deploy Website"
+  short_description: "Deploy an existing website to Cloudflare Workers safely"
+  default_prompt: "Use $cloudflare-deploy-website to deploy this website to Cloudflare and verify the live result."
